@@ -1,5 +1,8 @@
 # dsh-superagent-manager
 
+[![dsh-plugin](https://img.shields.io/badge/GitHub%20topic-dsh--plugin-3b82f6)](https://github.com/topics/dsh-plugin) [![awesome-dsh-plugins](https://img.shields.io/badge/awesome--dsh--plugins-PR%20open-6b7280)](https://github.com/cccakeee/awesome-dsh-plugins)
+
+
 一个 DeepSeek Harness（DSH）插件：在**同一个客户端**里管理多个 [`dsh-superagent`](https://github.com/deepseek-ai/dsh-superagent-prototype) 项目。
 
 每个项目对应一个独立的 `dsh web` 进程（独立端口、独立 stateDir、独立 profile），由本插件负责：
@@ -110,3 +113,17 @@ node --check lib/client.js
 ## License
 
 MIT
+
+## 生态与收录
+
+- **GitHub topic**：[dsh-plugin](https://github.com/topics/dsh-plugin)——DSH 社区约定的插件标记，本仓库已加上
+  `dsh` / `dsh-plugin` / `deepseek-harness` / `plugin` 等 topics。
+- **社区目录**：已向 [cccakeee/awesome-dsh-plugins](https://github.com/cccakeee/awesome-dsh-plugins) 提交收录 PR；
+  收录后可在 [deepseekharnessplugins.com](https://deepseekharnessplugins.com) 与
+  [awesome-dsh-plugin.com](https://awesome-dsh-plugin.com) 搜到。
+- **客户端插件市场**：DSH 的「设置 → 插件市场」只读**配置里的索引 URL**（不搜 npm）。索引格式 1 的示例见
+  [Aily-DSH/dsh-plugin-index](https://github.com/Aily-DSH/dsh-plugin-index)，把它的 jsDelivr 地址加进
+  `dsh.profile.indexes` 即可在客户端内直接看到 dsh-superagent-manager。
+- **查不到时**：npm / GitHub 搜索有索引延迟，新包一般 1–3 天；先用
+  `dsh plugin --profile desktop add git+https://github.com/Aily-DSH/dsh-superagent-manager.git` 直接装。
+
