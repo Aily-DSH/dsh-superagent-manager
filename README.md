@@ -44,26 +44,59 @@ dsh plugin --profile <profile> add link:/path/to/dsh-superagent-manager
 
 ## 使用
 
-1. 打开 **设置 → 插件 → Super Agent 管理**：填写项目名（可选：owner / 仓库名 / 是否私有），点击创建。
-   插件会创建或复用 GitHub 仓库，把仓库 clone 到 `$DSH_HOME/state/<id>/repos/<repo>`，在侧边栏生成同名工作区，并启动实例。
+1. 打开 **设置 → 插件 → Super Agent 管理**：填写项目名（可选：owner / 仓库名 / 审批人 / 是否私有），点击
+   **下一步：确认仓库**——先看清完整的 `owner/repo`、可见性、本地目录与审批人，再点 **确认创建**。
+   仓库已存在时不会静默复用，只会给出 **接入已有仓库** 这一个选项。
+   插件会创建 GitHub 仓库，把仓库 clone 到 `$DSH_HOME/state/<id>/repos/<repo>`，在侧边栏生成工作区，并启动实例。
+   克隆目录的工作区标题是 **`<项目名>（实例克隆）`**，这样和你本机同名项目的工作区不会看起来像同一个；
+   你手动改过的标题不会被覆盖，指向真实项目目录的工作区也不会被改名。
+   项目名与仓库名是两件事：中文名没有 ASCII 主干时会生成 `project-<随机短ID>`，因此不同项目不会落到同一个仓库。
 2. 左侧点击 **Super Agent** 打开面板：每个项目一个标签页。
    - 标签右侧的开关 = 启用 / 停用该实例，与设置页状态同步；
-   - `刷新` 重新拉取实例状态，`停用 / 启用` 对当前标签页操作，`新标签页打开` 直接访问代理地址；
-   - 每个实例只挂载已打开过的 iframe（懒加载），停用的实例保留最后一个画面。
+   - 所有**运行中**的实例在面板打开时就一起挂载，切换标签只是显示 / 隐藏，不会重新加载；
+   - 离开面板（去设置、去对话）只是把面板层收起，iframe 仍然活着；再回来立刻可用；
+   - `刷新` 是唯一会重新加载的动作，且只重载**当前**项目，其余标签页不重载、滚动位置与输入保留；
+   - `同步会话` 把实例里新建、但工作区还没登记的对话补进它的工作区，登记完侧边栏（外层对话区）立刻能看到；
+     打开面板时会自动跑一次（60 秒节流），按钮可以随时手动补跑，重复的会跳过；子代理派生的会话不会被登记。
+     注意：会话属于它发生时的那个目录，实例在克隆目录里工作，所以这些对话登记在**实例的工作区**里，
+     不会跑到你本机同名项目的工作区下面；
+   - `停用 / 启用` 对当前标签页操作，`新标签页打开` 直接访问代理地址；
+   - 停用的实例会被卸载而不是留下一张死页面，重新启用时加载一份新文档。
 3. 首次打开某个实例时，实例 UI 在自己的子域里，可正常登录/选择工作区，且不会污染客户端本体的 localStorage。
+
+### 移除一个实例
+
+「移除」是每个实例各自的对话框，默认**保留**文件：先停止实例，停止没有确认就整体中止并返回 409，
+一个字节都不会删。确认停止后才会注销记录、删掉插件生成的 profile；克隆目录与状态目录（含日志、
+会话）只有勾选「同时删除」才会删，GitHub 仓库与你自己指定的项目目录永远不动。
 
 ## HTTP API
 
-全部挂在客户端同源前缀 `/api/dsh-superagent-manager` 下，仅接受回环地址请求。
+全部挂在客户端同源前缀 `/api/dsh-superagent-manager` 下。校验分两层：**回环 peer + 回环 Host**
+（挡 DNS rebinding），以及**受信 Origin**——请求带 `Origin` 时必须是回环地址且端口与 Host 一致，
+或者是桌面壳自己的 `dsh-app://` / `file:`；带 `Referer` 时其 origin 同样必须属于这两类。
+其余一律 403。
+
+这里刻意**不用 `Sec-Fetch-Site` 当闸门**：桌面端前端是从 `dsh-app://app` 加载的，它嵌的
+`http://127.0.0.1:<proxyPort>` iframe 按 Chromium 的 site 定义永远是 `cross-site`，
+拿它判死会把面板自己拦掉（0.3.2 的实际故障）。
+
+已知边界：跨站 iframe 加上 `referrerpolicy="no-referrer"` 可以绕过 Referer 那一层——它读不到
+页面 DOM，但能触发页面内的点击/表单。要彻底关闭这个口子，下一步应给代理加
+`SameSite=Strict` 的一次性凭据，而不是继续堆请求头判断。
 
 | 方法 | 路径 | 说明 |
 | --- | --- | --- |
-| GET | `/instances` | 实例列表（运行状态、端口、颜色、负载、workspace、viewer） |
-| POST | `/create` | 创建项目，body：`{ name, owner?, repoName?, private?, createRepo?, color? }` |
-| POST | `/start` | 启动实例，body：`{ id }` |
-| POST | `/stop` | 停止实例，body：`{ id }` |
-| POST | `/remove` | 删除实例，body：`{ id, deleteFiles? }` |
+| GET | `/instances` | 实例列表（运行状态、期望状态、端口、颜色、负载、workspace、viewer、版本） |
+| POST | `/preview` | 预检：返回将要使用的 `owner/repo`、可见性、目录、审批人，以及仓库是否已存在；不产生任何副作用 |
+| POST | `/create` | 创建项目，body：`{ name, owner?, repoName?, operator?, private?, createRepo?, localPath?, adopt?, color? }` |
+| POST | `/start` | 启动实例，body：`{ id, operator? }` |
+| POST | `/stop` | 停止实例，body：`{ id }`；停止未确认时返回 409 并附 `reason` |
+| POST | `/remove` | 移除实例，body：`{ id, deleteFiles? }`；停止未确认时返回 409，且不删文件、不注销 |
 | POST | `/color` | 修改侧边栏颜色，body：`{ id, color }` |
+
+注册表的所有写入都经过同一个队列，长操作结束后只 patch 自己那一条记录，因此并发
+「停止 A + 改 A 颜色 + 新建 B」不会互相覆盖。
 
 代理入口：`/sa/<id>/...` → `http://127.0.0.1:<port>/...`，包含 WebSocket（`/sa/<id>/api/remote.mux`）。实例的登录 token 由宿主服务端换取 Cookie 后转发，浏览器侧无需 token。
 
@@ -75,7 +108,7 @@ dsh plugin --profile <profile> add link:/path/to/dsh-superagent-manager
 | `$DSH_HOME/state/<id>/` | 实例 stateDir（含 `repos/<repo>`、`web.log`、orchestrator 数据） |
 | `$DSH_HOME/profiles/<id>/` | 实例 profile（bundle、端口、stateDir、node_modules junction） |
 | `DSH_SUPERAGENT_MANAGER_HOME` | 覆盖注册表根目录（默认 `$DSH_HOME/state`），便于隔离测试 |
-| `SUPERAGENT_MANAGER_OPERATOR` | 实例初始化时写入的 operator，默认 `SolaNoKan` |
+| `SUPERAGENT_MANAGER_OPERATOR` | 实例初始化时写入的 operator（审批人 GitHub 账号）。**没有默认值**：不指定时不邀请任何协作者，GitHub 来源也不接受任何人的指令 |
 
 ## 架构
 
