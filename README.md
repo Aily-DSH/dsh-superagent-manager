@@ -3,6 +3,11 @@
 [![dsh-plugin](https://img.shields.io/badge/GitHub%20topic-dsh--plugin-3b82f6)](https://github.com/topics/dsh-plugin) [![awesome-dsh-plugins](https://img.shields.io/badge/awesome--dsh--plugins-PR%20open-6b7280)](https://github.com/cccakeee/awesome-dsh-plugins)
 
 
+> ⚠️ **自用测试版（personal-use beta）**：这个插件是作者日常自用的工具，不是稳定发行版。
+> 它需要拉起子进程、改写工作区登记表、代理 HTTP 与 WebSocket，实际使用中可能遇到意料之外的
+> bug 和报错（实例起不来、面板白屏、代理 401/断流、会话登记错位等）。遇到问题先试「停用 → 启用」
+> 或重启桌面客户端；重要项目请保留独立副本，不要只把唯一的仓库放在实例克隆目录里。
+
 一个 DeepSeek Harness（DSH）插件：在**同一个客户端**里管理多个 [`dsh-superagent`](https://github.com/deepseek-ai/dsh-superagent-prototype) 项目。
 
 每个项目对应一个独立的 `dsh web` 进程（独立端口、独立 stateDir、独立 profile），由本插件负责：
@@ -61,7 +66,10 @@ dsh plugin --profile <profile> add link:/path/to/dsh-superagent-manager
      注意：会话属于它发生时的那个目录，实例在克隆目录里工作，所以这些对话登记在**实例的工作区**里，
      不会跑到你本机同名项目的工作区下面；
    - `停用 / 启用` 对当前标签页操作，`新标签页打开` 直接访问代理地址；
-   - 停用的实例会被卸载而不是留下一张死页面，重新启用时加载一份新文档。
+   - 停用的实例会被卸载而不是留下一张死页面，重新启用时加载一份新文档；
+   - 实例的插件清单在**启动时**跟着宿主同步（`bundle` 列表取自宿主 profile，去掉只属于主窗口的几条）。
+     所以宿主新装的插件（比如上下文压缩 `billion-context`）要重启实例才生效；没重启时面板会在标签栏下面
+     显示一条琥珀色提示，列出还没加载的插件名。
 3. 首次打开某个实例时，实例 UI 在自己的子域里，可正常登录/选择工作区，且不会污染客户端本体的 localStorage。
 
 ### 移除一个实例
