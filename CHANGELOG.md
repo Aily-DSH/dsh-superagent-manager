@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.3.7
+
+**每个实例用自己的会话目录，`error.sessionInUse` 不再出现。** DSH 的会话是单写者内核锁
+（Windows 命名信号量 / POSIX flock），同一个会话被两个 DSH 进程打开时，后到的那个会报
+「当前会话已被占用，可能是其他正在运行的 DSH 导致的」。实例和宿主共用 `~/.dsh/sessions`
+时，面板里还会列出宿主的全部工作区——在面板里点一个宿主正在用的对话，就必然撞上这把锁。
+
+- 实例 profile 的 `cordis.patch.yml` 现在给 `session-persistence-jsonl` 单独指定
+  `root: <stateDir>/sessions`，实例只看得见自己的会话，和宿主、其他实例完全隔离。
+- 首次启动会把宿主 `sessions/` 里属于该项目的 bucket（按克隆目录和 stateDir 的路径名）
+  一次性复制进来，所以之前已有的对话仍然能在面板里打开；之后两边各写各的，不再互相锁。
+- 想恢复原来的「共享会话」行为（也接受锁冲突），启动宿主时设
+  `DSH_SUPERAGENT_SHARED_SESSIONS=1`。
+- 已有实例需要重启一次（停用再启用）才会换到自己的会话目录。
+
 ## 0.3.6
 
 **插件清单会自动跟上宿主（压缩插件不再漏挂）。** 实例的 profile 只在**启动时**写一次

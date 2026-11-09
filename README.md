@@ -113,10 +113,19 @@ dsh plugin --profile <profile> add link:/path/to/dsh-superagent-manager
 | 路径 / 变量 | 说明 |
 | --- | --- |
 | `$DSH_HOME/state/superagent-manager/instances.json` | 实例注册表 |
-| `$DSH_HOME/state/<id>/` | 实例 stateDir（含 `repos/<repo>`、`web.log`、orchestrator 数据） |
-| `$DSH_HOME/profiles/<id>/` | 实例 profile（bundle、端口、stateDir、node_modules junction） |
+| `$DSH_HOME/state/<id>/` | 实例 stateDir（含 `repos/<repo>`、`web.log`、`sessions/`、orchestrator 数据） |
+| `$DSH_HOME/profiles/<id>/` | 实例 profile（bundle、端口、stateDir、session root、node_modules junction） |
 | `DSH_SUPERAGENT_MANAGER_HOME` | 覆盖注册表根目录（默认 `$DSH_HOME/state`），便于隔离测试 |
+| `DSH_SUPERAGENT_SHARED_SESSIONS=1` | 让实例与宿主共用 `$DSH_HOME/sessions`（旧行为；同一个对话不能同时在两边打开） |
 | `SUPERAGENT_MANAGER_OPERATOR` | 实例初始化时写入的 operator（审批人 GitHub 账号）。**没有默认值**：不指定时不邀请任何协作者，GitHub 来源也不接受任何人的指令 |
+
+### 会话目录是隔离的
+
+每个实例的 profile 会把 `session-persistence-jsonl.root` 指到
+`<stateDir>/sessions`，所以面板里只出现该实例自己的对话，不会列出宿主的工作区。这样也避免了
+DSH 的单写者会话锁：同一个对话被两个 DSH 进程打开时，后到的那个只会报
+`error.sessionInUse`（当前会话已被占用）。首次启动会把宿主 `sessions/` 里属于该项目的
+bucket 一次性复制进来，历史对话仍然可见。
 
 ## 架构
 
