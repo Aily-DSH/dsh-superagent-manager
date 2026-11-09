@@ -1,6 +1,6 @@
 {
   "name": "dsh-superagent-manager",
-  "version": "0.3.8",
+  "version": "0.3.9",
   "private": true,
   "type": "module",
   "description": "Manage dsh-superagent projects from one DSH client: create the repository, clone, sidebar Workspace and Super Agent instance, then run and proxy every instance in a tabbed panel.",

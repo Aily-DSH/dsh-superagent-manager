@@ -75,6 +75,12 @@ dsh plugin --profile <profile> add link:/path/to/dsh-superagent-manager
      所以宿主新装的插件（比如上下文压缩 `billion-context`）要重启实例才生效；没重启时面板会在标签栏下面
      显示一条琥珀色提示，列出还没加载的插件名。
 3. 首次打开某个实例时，实例 UI 在自己的子域里，可正常登录/选择工作区，且不会污染客户端本体的 localStorage。
+4. **客户端内项目（Super Agent）**：左侧「Superagent」是客户端自己的一个 Super Agent，只能绑定一个仓库。
+   在设置页顶部的「客户端内项目」里选一个已管理的项目，点 **设为客户端项目**，它就会成为客户端里直接对话的那个；
+   其余项目留在「Super Agent」面板，用 `对话` 只读查看。
+   切换会改写客户端 Super Agent 的设置快照：先把 `orchestrator.sqlite*` 备份到 `$DSH_HOME/state/superagent/`，
+   写入一个新版本（`settings-version:<n>`），并记住历史版本——下面的「恢复到旧设置」可以随时换回去。
+   仓库缺失时会先 clone 到 `$DSH_HOME/state/superagent/repos/<repo>`。**切换后需要重启一次客户端**才生效。
 
 ### 移除一个实例
 

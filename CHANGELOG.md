@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.3.9
+
+**客户端里只留一个项目直接对话，其余项目留在面板里。** 客户端的「Superagent」是一个独立的
+`dsh-superagent` 运行时，它的仓库写在 `~/.dsh/state/superagent/orchestrator.sqlite` 的
+设置快照里，不是本插件的登记表；以前想换项目只能去 Superagent 设置页手动改。
+
+- 设置页顶部新增「客户端内项目（Super Agent）」：显示当前绑定的仓库、克隆目录、设置版本，
+  可以从已管理的项目里选一个 **设为客户端项目**。
+- 切换前先把 `orchestrator.sqlite*` 备份成 `orchestrator.sqlite.bak-<时间>`，再写入一个新版本
+  `settings-version:<n>`，同时更新 `settings-revision` 和对应的 block revision（source:github /
+  executor / 需要时的 policy）；仓库缺失时先 clone 到 `$DSH_HOME/state/superagent/repos/<repo>`。
+- 「恢复到旧设置」把任意历史版本写成新版本，换错了可以一键换回（老快照一直保留）。
+- 改动需要**重启一次客户端**才生效；原来的对话仍可在面板的 `对话` 里只读查看。
+
 ## 0.3.8
 
 **面板里直接看每个项目的对话（只读），不用先切进实例。** 0.3.7 把实例会话目录隔离之后，
