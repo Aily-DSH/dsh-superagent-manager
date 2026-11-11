@@ -155,6 +155,27 @@ DSH client (this plugin)
 
 实例是 detached 子进程：客户端退出后仍在运行，下次启动由 `autoResume` 接管。
 
+## 与远程 / 移动插件共存（重要）
+
+实例会继承客户端的 bundle 列表，但有两个 bundle **永远不会被复制进实例**：`ds-harness-remote`
+（DeepSeek 远程连接）和 `dsh-go-workspace`（DSH Go 电脑互联）。
+
+原因：这两个插件的身份都是按 `DSH_HOME` 里的设备密钥算的，而实例和客户端共用同一个 `~/.dsh`。
+一旦实例也加载它们，就会有多个进程拿**同一个设备身份**去连服务器 / 抢同一个端口：
+
+- `[dsh-remote] server control connection failed {"code":"CONNECTION_REPLACED"}`
+- `[dsh-remote] Another instance is using this Host identity. Stop it or use a separate DSH_HOME; automatic reconnect is paused.`
+- 严重时桌面壳直接报「应用无法启动或已意外停止」，或手机 App 里的电脑反复上下线
+- `dsh-go-workspace` 还会抢 3443 端口 / 配对设备列表，出现端口被占或重复设备
+
+因此：
+
+1. **远程 / 移动连接只在客户端窗口里开，实例里不要装。** 本插件会自动把它们从实例清单里过滤掉。
+2. 0.3.7 之前创建的实例，profile 里可能还留着这两个条目；面板会提示「插件清单里还带着只属于
+   客户端的…」，点 **停用 → 启用** 让它重写 profile 即可（会话不丢）。
+3. 如果确实需要在实例里也用远程能力，只能给该实例单独的 `DSH_HOME`（本插件暂不提供），
+   否则两个进程不能同时在线。
+
 ## 限制
 
 - 一个项目一个进程 / 端口；实例数量受端口与内存约束。

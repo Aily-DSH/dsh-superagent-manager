@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.3.10
+
+**实例不再继承远程 / 移动连接插件，避免和应用抢设备身份。** `ds-harness-remote` 和
+`dsh-go-workspace` 的设备身份都按 `DSH_HOME` 计算，而实例与客户端共用同一个 `~/.dsh`；
+把它们复制进实例后，多个进程会拿同一个身份连服务器，出现 `CONNECTION_REPLACED`、
+`Another instance is using this Host identity`，严重时桌面壳直接报「应用无法启动或已意外停止」，
+手机 App 里那台电脑也会反复上下线。
+
+- 实例 bundle 过滤新增 `dsh-go-workspace`（此前只过滤了 `ds-harness-remote`），两者都不会再进实例。
+- 面板新增提示：旧实例 profile 里仍带着这些宿主专属插件时直接点名，并提示「停用 → 启用」重写。
+- README 增加「与远程 / 移动插件共存」一节：症状、原因、排查步骤和唯一可行的绕法。
+
 ## 0.3.9
 
 **客户端里只留一个项目直接对话，其余项目留在面板里。** 客户端的「Superagent」是一个独立的
