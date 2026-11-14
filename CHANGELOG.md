@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.3.11
+
+**本地目录项目不再把文件夹路径当成 GitHub 仓库**
+
+- 没有仓库的本地项目：不再写 `source:github`（之前会 400 `Invalid settings: repository` / `The GitHub Source names no repository`），其余设置照常落地，实例能正常启动；
+- 目录本身是 GitHub 检出时自动读取 `origin` 作为仓库，Super Agent 照常工作；
+- 创建时的确认信息会写明「这个目录不是 GitHub 检出：Super Agent 暂时没有来源」；
+- 旧记录里 `repo` 存着本地路径的实例，读取时按「无仓库」处理，不再反复报错。
+
 ## 0.3.10
 
 **实例不再继承远程 / 移动连接插件，避免和应用抢设备身份。** `ds-harness-remote` 和
